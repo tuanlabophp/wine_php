@@ -1,0 +1,6 @@
+{
+    "name": "nhc_btl",
+    "require": {
+    	"php": "^7.1.3",
+    }
+}

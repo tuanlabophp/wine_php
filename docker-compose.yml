@@ -1,0 +1,46 @@
+version: "2"
+
+services:
+  application:
+    image: ubuntu:16.04
+    volumes:
+      - ./:/var/www/app
+
+  php:
+    build:
+      context: ./.develop
+      dockerfile: ./web/Dockerfile
+    image: lareact-php
+    restart: on-failure
+    volumes:
+      - ./.develop/apache/apache2.conf:/etc/apache2/apache2.conf
+      - ./.develop/apache/socache_shmcb.load:/etc/apache2/mods-enabled/socache_shmcb.load
+      - ./.develop/apache/default.conf:/etc/apache2/sites-enabled/000-default.conf
+      - ./.develop/apache/phpmyadmin.conf:/etc/apache2/sites-enabled/phpmyadmin.conf
+      - ./.develop/apache/rewrite.load:/etc/apache2/mods-enabled/rewrite.load
+      - ./.develop/php/limit.ini:/usr/local/etc/php/conf.d/limit.ini
+    volumes_from:
+      - application
+    working_dir: /var/www/app
+    ports:
+      - "80:80"
+      - "6968:6968"
+
+  phpmyadmin:
+    image: busybox:1.26.2
+    command: [/bin/sh, ./.develop/phpmyadmin/command.sh]
+    volumes:
+      - .:/var/www/app
+    working_dir: /var/www/app
+
+  mariadb:
+    image: mariadb:10.0.31
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: nhc_btl
+      MYSQL_USER: guest
+      MYSQL_PASSWORD: 123456
+    volumes:
+      - ./src/database/create_db.sql:/docker-entrypoint-initdb.d/schema.sql:ro
+    volumes_from:
+      - application
